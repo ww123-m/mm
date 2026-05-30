@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品详情 - MM商城</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="container">
+      <div class="left-links">
+        <a href="login.html">你好，请登录</a>
+        <a href="login.html">免费注册</a>
+        <span>|</span>
+        <a href="#">我的订单</a>
+        <a href="#">会员中心</a>
+      </div>
+      <div class="right-links">
+        <a href="cart.html" class="cart-link">🛒 购物车(<span class="badge">0</span>)</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo">MM<span>商城</span></a>
+      <div class="search-bar">
+        <input type="text" placeholder="搜索商品/品牌/品类" id="searchInput">
+        <button onclick="searchProducts()">搜索</button>
+      </div>
+      <a href="cart.html" class="header-cart">🛒 购物车<span class="badge">0</span></a>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-all">全部商品分类</div>
+      <div class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="list.html?cat=手机通讯">手机通讯</a>
+        <a href="list.html?cat=电脑办公">电脑办公</a>
+        <a href="list.html?cat=智能设备">智能设备</a>
+        <a href="list.html?cat=家用电器">家用电器</a>
+        <a href="list.html?cat=美妆护肤">美妆护肤</a>
+        <a href="list.html?cat=鞋靴箱包">鞋靴箱包</a>
+        <a href="list.html?cat=游戏电竞">游戏电竞</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container detail-page">
+    <div class="detail-main">
+      <div class="detail-gallery">
+        <div class="main-img" id="mainImg"></div>
+        <div class="thumb-list" id="thumbList"></div>
+      </div>
+      <div class="detail-info">
+        <h1 id="productTitle"></h1>
+        <div class="price-box">
+          <div class="price-label">MM价</div>
+          <div>
+            <span class="price" id="productPrice"></span>
+            <span class="original-price" id="originalPrice"></span>
+          </div>
+          <div class="promo" id="productPromo"></div>
+        </div>
+        <div class="detail-spec" id="specSection"></div>
+        <div class="detail-spec" id="colorSection"></div>
+        <div class="detail-qty">
+          <span class="qty-label">数量</span>
+          <button onclick="changeQty(-1)">−</button>
+          <input type="number" value="1" min="1" max="99" id="qtyInput">
+          <button onclick="changeQty(1)">+</button>
+        </div>
+        <div class="detail-actions">
+          <button class="btn-buy" onclick="buyNow()">立即购买</button>
+          <button class="btn-cart" onclick="addNow()">加入购物车</button>
+        </div>
+        <div class="detail-extra">
+          <div class="extra-row"><span>服务</span> 正品保障 · 极速退款 · 七天无理由</div>
+          <div class="extra-row"><span>配送</span> 预计明日送达 · 上门自提 · 免运费</div>
+          <div class="extra-row"><span>重量</span> 约 0.5kg</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="container" style="margin-top:20px;">
+      <div class="section-title">
+        <h2>相关推荐</h2>
+        <div class="line"></div>
+      </div>
+      <div class="product-grid" id="relatedProducts"></div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 MM商城 版权所有 | 仅供学习演示用途</div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script>
+    const pid = parseInt(getQueryParam("id")) || 1;
+    const product = PRODUCTS.find(p => p.id === pid) || PRODUCTS[0];
+    let selectedSpec = product.specs[0];
+    let selectedColor = product.colors[0];
+
+    document.getElementById("mainImg").textContent = product.img;
+    document.getElementById("thumbList").innerHTML = [product.img, product.img, product.img, product.img].map((e, i) =>
+      `<div class="thumb-item${i === 0 ? ' active' : ''}" onclick="selectThumb(this)">${e}</div>`
+    ).join("");
+    document.getElementById("productTitle").textContent = product.name;
+    document.getElementById("productPrice").innerHTML = `<small>¥</small>${formatPrice(product.price)}`;
+    document.getElementById("originalPrice").textContent = `¥${formatPrice(product.original)}`;
+    document.getElementById("productPromo").textContent = `满500减50 | 预估到手 ¥${formatPrice(product.price - 50)}`;
+
+    function renderSpecs(containerId, items, selected, onSelect) {
+      document.getElementById(containerId).innerHTML =
+        `<div class="spec-title">选择${containerId === 'specSection' ? '规格' : '颜色'}</div>` +
+        `<div class="spec-options">${items.map(s =>
+          `<div class="spec-item${s === selected ? ' active' : ''}" onclick="${onSelect}('${s}')">${s}</div>`
+        ).join("")}</div>`;
+    }
+    renderSpecs("specSection", product.specs, selectedSpec, "selectSpec");
+    renderSpecs("colorSection", product.colors, selectedColor, "selectColor");
+
+    window.selectSpec = function(s) { selectedSpec = s; renderSpecs("specSection", product.specs, selectedSpec, "selectSpec"); };
+    window.selectColor = function(c) { selectedColor = c; renderSpecs("colorSection", product.colors, selectedColor, "selectColor"); };
+
+    window.selectThumb = function(el) {
+      document.querySelectorAll(".thumb-item").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+    };
+
+    window.changeQty = function(d) {
+      const input = document.getElementById("qtyInput");
+      const val = parseInt(input.value) || 1;
+      input.value = Math.max(1, Math.min(99, val + d));
+    };
+
+    window.addNow = function() {
+      const qty = parseInt(document.getElementById("qtyInput").value) || 1;
+      addToCart(product.id, qty);
+      if (confirm("已加入购物车！是否前往购物车？")) location.href = "cart.html";
+    };
+
+    window.buyNow = function() {
+      const qty = parseInt(document.getElementById("qtyInput").value) || 1;
+      addToCart(product.id, qty);
+      location.href = "cart.html";
+    };
+
+    const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 5);
+    if (related.length < 5) {
+      const extra = PRODUCTS.filter(p => p.id !== product.id && !related.find(r => r.id === p.id)).slice(0, 5 - related.length);
+      related.push(...extra);
+    }
+    document.getElementById("relatedProducts").innerHTML = related.map(p =>
+      `<a href="detail.html?id=${p.id}" class="product-card">
+        ${p.tag ? `<span class="product-tag">${p.tag}</span>` : ""}
+        <div class="product-img">${p.img}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price"><small>¥</small>${formatPrice(p.price)}</div>
+        <div class="product-comment">${p.comment} 条评价</div>
+      </a>`
+    ).join("");
+
+    function searchProducts() {
+      const q = document.getElementById("searchInput").value.trim();
+      if (q) location.href = `list.html?q=${encodeURIComponent(q)}`;
+    }
+    document.getElementById("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") searchProducts(); });
+
+    updateCartBadge();
+    document.title = product.name + " - MM商城";
+  </script>
+</body>
+</html>

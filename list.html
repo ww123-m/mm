@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品列表 - MM商城</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="container">
+      <div class="left-links">
+        <a href="login.html">你好，请登录</a>
+        <a href="login.html">免费注册</a>
+        <span>|</span>
+        <a href="#">我的订单</a>
+        <a href="#">会员中心</a>
+        <a href="#">客户服务</a>
+      </div>
+      <div class="right-links">
+        <a href="cart.html" class="cart-link">🛒 购物车(<span class="badge">0</span>)</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo">MM<span>商城</span></a>
+      <div class="search-bar">
+        <input type="text" placeholder="搜索商品/品牌/品类" id="searchInput">
+        <button onclick="searchProducts()">搜索</button>
+      </div>
+      <a href="cart.html" class="header-cart">🛒 购物车<span class="badge">0</span></a>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-all">全部商品分类</div>
+      <div class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="list.html?cat=手机通讯">手机通讯</a>
+        <a href="list.html?cat=电脑办公">电脑办公</a>
+        <a href="list.html?cat=智能设备">智能设备</a>
+        <a href="list.html?cat=家用电器">家用电器</a>
+        <a href="list.html?cat=美妆护肤">美妆护肤</a>
+        <a href="list.html?cat=鞋靴箱包">鞋靴箱包</a>
+        <a href="list.html?cat=游戏电竞">游戏电竞</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container list-page">
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-row">
+        <span class="filter-label">商品分类</span>
+        <div class="filter-options" id="catFilter"></div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">价格区间</span>
+        <div class="filter-options" id="priceFilter"></div>
+      </div>
+    </div>
+
+    <div class="sort-bar" id="sortBar">
+      <a href="#" class="active" onclick="sortProducts('default');return false;">综合</a>
+      <a href="#" onclick="sortProducts('sales');return false;">销量</a>
+      <a href="#" onclick="sortProducts('price-asc');return false;">价格 ↑</a>
+      <a href="#" onclick="sortProducts('price-desc');return false;">价格 ↓</a>
+      <a href="#" onclick="sortProducts('comment');return false;">评论数</a>
+    </div>
+
+    <div class="product-grid list-product-grid" id="productList"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 MM商城 版权所有 | 仅供学习演示用途</div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script>
+    const catParam = getQueryParam("cat") || "";
+    const qParam = getQueryParam("q") || "";
+    let currentCat = catParam;
+    let currentSort = "default";
+
+    document.getElementById("catFilter").innerHTML =
+      `<a href="#" class="${!currentCat ? 'active' : ''}" onclick="filterCat('');return false;">全部</a>` +
+      CATEGORIES.map(c => `<a href="#" class="${currentCat === c.name ? 'active' : ''}" onclick="filterCat('${c.name}');return false;">${c.icon} ${c.name}</a>`).join("");
+
+    const priceRanges = [
+      { label: "全部", min: 0, max: Infinity },
+      { label: "0-500", min: 0, max: 500 },
+      { label: "500-2000", min: 500, max: 2000 },
+      { label: "2000-5000", min: 2000, max: 5000 },
+      { label: "5000以上", min: 5000, max: Infinity },
+    ];
+    let currentPriceRange = priceRanges[0];
+    document.getElementById("priceFilter").innerHTML =
+      priceRanges.map((r, i) => `<a href="#" class="${i === 0 ? 'active' : ''}" onclick="filterPrice(${i});return false;">${r.label}</a>`).join("");
+
+    function filterCat(cat) {
+      currentCat = cat;
+      document.getElementById("catFilter").querySelectorAll("a").forEach(a => {
+        const t = a.textContent.trim().replace(/^[^\u4e00-\u9fa5]*/, "");
+        a.classList.toggle("active", (cat === "" && t === "全部") || t.includes(cat));
+      });
+      renderList();
+    }
+
+    function filterPrice(idx) {
+      currentPriceRange = priceRanges[idx];
+      document.getElementById("priceFilter").querySelectorAll("a").forEach((a, i) => a.classList.toggle("active", i === idx));
+      renderList();
+    }
+
+    function sortProducts(sort) {
+      currentSort = sort;
+      document.getElementById("sortBar").querySelectorAll("a").forEach(a => {
+        const map = { "综合": "default", "销量": "sales", "价格 ↑": "price-asc", "价格 ↓": "price-desc", "评论数": "comment" };
+        a.classList.toggle("active", map[a.textContent] === sort);
+      });
+      renderList();
+    }
+
+    function renderList() {
+      let list = [...PRODUCTS];
+      if (qParam) list = list.filter(p => p.name.includes(qParam) || p.category.includes(qParam));
+      if (currentCat) list = list.filter(p => p.category === currentCat);
+      list = list.filter(p => p.price >= currentPriceRange.min && p.price <= currentPriceRange.max);
+
+      switch (currentSort) {
+        case "price-asc": list.sort((a, b) => a.price - b.price); break;
+        case "price-desc": list.sort((a, b) => b.price - a.price); break;
+        case "comment": list.sort((a, b) => parseFloat(b.comment) - parseFloat(a.comment)); break;
+      }
+
+      document.getElementById("productList").innerHTML = list.length === 0
+        ? '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#999;font-size:16px;">没有找到相关商品，<a href="index.html" style="color:#e1251b;">返回首页</a></div>'
+        : list.map(p =>
+          `<a href="detail.html?id=${p.id}" class="product-card">
+            ${p.tag ? `<span class="product-tag">${p.tag}</span>` : ""}
+            <div class="product-img">${p.img}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-price"><small>¥</small>${formatPrice(p.price)}</div>
+            <div class="product-comment">${p.comment} 条评价</div>
+          </a>`
+        ).join("");
+    }
+
+    function searchProducts() {
+      const q = document.getElementById("searchInput").value.trim();
+      if (q) location.href = `list.html?q=${encodeURIComponent(q)}`;
+    }
+    document.getElementById("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") searchProducts(); });
+
+    renderList();
+    updateCartBadge();
+  </script>
+</body>
+</html>

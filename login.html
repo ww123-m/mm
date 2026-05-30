@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - MM商城</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-page { background: #fff; min-height: 100vh; }
+    .login-banner { width: 100%; height: 320px; background: linear-gradient(135deg, #e1251b 0%, #ff6b35 50%, #e1251b 100%); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .login-banner::before { content: ""; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%; top: -100px; right: -100px; }
+    .login-banner::after { content: ""; position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%); border-radius: 50%; bottom: -50px; left: -50px; }
+    .login-banner .logo-big { font-size: 56px; font-weight: 900; color: #fff; letter-spacing: 8px; z-index: 1; }
+    .login-banner .logo-big span { color: #ffe0d0; font-size: 20px; font-weight: 400; display: block; letter-spacing: 2px; margin-top: 8px; }
+    .login-wrapper { max-width: 380px; margin: -80px auto 40px; position: relative; z-index: 2; }
+    .login-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); padding: 30px; }
+    .login-card h2 { text-align: center; margin-bottom: 20px; font-size: 20px; color: #333; }
+    .form-group { margin-bottom: 15px; position: relative; }
+    .form-group input { width: 100%; height: 42px; border: 1px solid #ddd; border-radius: 4px; padding: 0 12px 0 38px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .form-group input:focus { border-color: #e1251b; box-shadow: 0 0 0 2px rgba(225,37,27,0.1); }
+    .form-group .form-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #999; }
+    .form-options { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; }
+    .form-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: #666; }
+    .form-options label input { accent-color: #e1251b; }
+    .form-options a { color: #e1251b; }
+    .btn-submit { width: 100%; height: 44px; background: #e1251b; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-submit:hover { background: #c91623; }
+    .btn-submit:active { transform: scale(0.99); }
+    .divider { text-align: center; margin: 20px 0; position: relative; }
+    .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 100px; height: 1px; background: #eee; }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .divider span { font-size: 12px; color: #999; background: #fff; padding: 0 12px; position: relative; z-index: 1; }
+    .social-login { display: flex; justify-content: center; gap: 24px; margin-top: 5px; }
+    .social-btn { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; cursor: pointer; transition: transform 0.2s; }
+    .social-btn:hover { transform: scale(1.1); }
+    .switch-link { text-align: center; margin-top: 15px; font-size: 13px; color: #999; }
+    .switch-link a { color: #e1251b; font-weight: bold; }
+    .login-footer { text-align: center; padding: 20px; font-size: 12px; color: #999; }
+  </style>
+</head>
+<body class="login-page">
+  <div class="login-banner">
+    <div class="logo-big">MM商城<span>品质好物 · 尽在MM</span></div>
+  </div>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-tabs" style="display:flex;border-bottom:2px solid #eee;margin-bottom:20px;">
+        <div class="login-tab active" id="tabLogin" onclick="switchTab('login')" style="flex:1;text-align:center;padding:10px 0;cursor:pointer;font-size:15px;color:#999;">账号登录</div>
+        <div class="login-tab" id="tabRegister" onclick="switchTab('register')" style="flex:1;text-align:center;padding:10px 0;cursor:pointer;font-size:15px;color:#999;">免费注册</div>
+      </div>
+
+      <div id="loginForm">
+        <div class="form-group">
+          <span class="form-icon">👤</span>
+          <input type="text" placeholder="请输入账号/手机号/邮箱" id="loginUser">
+        </div>
+        <div class="form-group">
+          <span class="form-icon">🔒</span>
+          <input type="password" placeholder="请输入密码" id="loginPass">
+        </div>
+        <div class="form-options">
+          <label><input type="checkbox" checked> 记住我</label>
+          <a href="#">忘记密码？</a>
+        </div>
+        <button class="btn-submit" onclick="doLogin()">登 录</button>
+      </div>
+
+      <div id="registerForm" style="display:none;">
+        <div class="form-group">
+          <span class="form-icon">📱</span>
+          <input type="text" placeholder="请输入手机号" id="regPhone">
+        </div>
+        <div class="form-group">
+          <span class="form-icon">✉️</span>
+          <input type="text" placeholder="请输入验证码" id="regCode" style="padding-right:100px;">
+          <button onclick="sendCode()" style="position:absolute;right:1px;top:1px;height:40px;padding:0 12px;background:#f5f5f5;border:1px solid #ddd;border-radius:0 4px 4px 0;cursor:pointer;font-size:12px;color:#666;">获取验证码</button>
+        </div>
+        <div class="form-group">
+          <span class="form-icon">🔒</span>
+          <input type="password" placeholder="设置密码 (6-20位)" id="regPass">
+        </div>
+        <div class="form-group">
+          <span class="form-icon">🔒</span>
+          <input type="password" placeholder="确认密码" id="regPass2">
+        </div>
+        <div class="form-options">
+          <label><input type="checkbox" checked> 同意 <a href="#">《用户协议》</a></label>
+        </div>
+        <button class="btn-submit" onclick="doRegister()">注 册</button>
+      </div>
+
+      <div class="divider"><span>其他登录方式</span></div>
+      <div class="social-login">
+        <div class="social-btn" style="background:#07c160;" title="微信登录">💬</div>
+        <div class="social-btn" style="background:#1296db;" title="QQ登录">🐧</div>
+        <div class="social-btn" style="background:#e1251b;" title="微博登录">📱</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-footer">© 2026 MM商城 版权所有 | 仅供学习演示用途</div>
+
+  <script src="js/data.js"></script>
+  <script>
+    window.switchTab = function(tab) {
+      document.getElementById("tabLogin").className = tab === "login" ? "login-tab active" : "login-tab";
+      document.getElementById("tabRegister").className = tab === "register" ? "login-tab active" : "login-tab";
+      document.getElementById("tabLogin").style.color = tab === "login" ? "#e1251b" : "#999";
+      document.getElementById("tabRegister").style.color = tab === "register" ? "#e1251b" : "#999";
+      document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
+      document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
+    };
+
+    window.doLogin = function() {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      if (!user) { alert("请输入账号"); return; }
+      if (!pass) { alert("请输入密码"); return; }
+      alert("登录成功！欢迎回来，" + user + "（演示功能）");
+      location.href = "index.html";
+    };
+
+    window.doRegister = function() {
+      const phone = document.getElementById("regPhone").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+      const pass2 = document.getElementById("regPass2").value.trim();
+      if (!phone) { alert("请输入手机号"); return; }
+      if (phone.length !== 11) { alert("手机号格式不正确"); return; }
+      if (!pass || pass.length < 6) { alert("密码长度不能少于6位"); return; }
+      if (pass !== pass2) { alert("两次密码输入不一致"); return; }
+      alert("注册成功！请登录（演示功能）");
+      switchTab("login");
+    };
+
+    window.sendCode = function() {
+      const phone = document.getElementById("regPhone").value.trim();
+      if (!phone || phone.length !== 11) { alert("请先输入正确的手机号"); return; }
+      alert("验证码已发送至 " + phone + "（演示功能：验证码 8888）");
+    };
+  </script>
+</body>
+</html>

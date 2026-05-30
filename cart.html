@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>购物车 - MM商城</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="container">
+      <div class="left-links">
+        <a href="login.html">你好，请登录</a>
+        <a href="login.html">免费注册</a>
+        <span>|</span>
+        <a href="#">我的订单</a>
+        <a href="#">会员中心</a>
+      </div>
+      <div class="right-links">
+        <a href="cart.html" class="cart-link">🛒 购物车(<span class="badge">0</span>)</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo">MM<span>商城</span></a>
+      <div class="search-bar">
+        <input type="text" placeholder="搜索商品/品牌/品类" id="searchInput">
+        <button onclick="searchProducts()">搜索</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-all">全部商品分类</div>
+      <div class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="list.html?cat=手机通讯">手机通讯</a>
+        <a href="list.html?cat=电脑办公">电脑办公</a>
+        <a href="list.html?cat=智能设备">智能设备</a>
+        <a href="list.html?cat=家用电器">家用电器</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container cart-page">
+    <div class="section-title">
+      <h2>🛒 我的购物车</h2>
+      <div class="line"></div>
+    </div>
+    <div class="cart-container">
+      <div class="cart-header">
+        <div class="col-check"><input type="checkbox" id="selectAll" checked onchange="toggleSelectAll()" style="accent-color:#e1251b;width:16px;height:16px;cursor:pointer;"></div>
+        <div class="col-product">商品信息</div>
+        <div class="col-price">单价</div>
+        <div class="col-qty">数量</div>
+        <div class="col-total">小计</div>
+        <div class="col-action">操作</div>
+      </div>
+      <div id="cartBody"></div>
+      <div class="cart-footer" id="cartFooter">
+        <label class="select-all">
+          <input type="checkbox" id="selectAllBottom" checked onchange="toggleSelectAll()">
+          全选
+        </label>
+        <div class="cart-total">
+          <span class="total-label">已选 <span id="selectedCount">0</span> 件</span>
+          <span class="total-label">合计：</span>
+          <span class="total-price"><small>¥</small><span id="totalPrice">0.00</span></span>
+        </div>
+        <button class="btn-checkout" onclick="checkout()">去结算</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 MM商城 版权所有 | 仅供学习演示用途</div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script>
+    let selectedItems = new Set();
+
+    function renderCart() {
+      const cart = getCart();
+      const body = document.getElementById("cartBody");
+
+      if (cart.length === 0) {
+        body.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><p>购物车还是空的</p><a href="index.html" style="color:#e1251b;margin-top:10px;display:inline-block;">去逛逛 ›</a></div>`;
+        document.getElementById("cartFooter").style.display = "none";
+        return;
+      }
+
+      document.getElementById("cartFooter").style.display = "flex";
+
+      if (selectedItems.size === 0) cart.forEach(item => selectedItems.add(item.id));
+
+      body.innerHTML = cart.map(item =>
+        `<div class="cart-item" data-id="${item.id}">
+          <div class="col-check"><input type="checkbox" ${selectedItems.has(item.id) ? 'checked' : ''} onchange="toggleItem(${item.id}, this.checked)"></div>
+          <div class="col-product">
+            <div class="cart-item-img">${item.img}</div>
+            <div class="cart-item-name"><a href="detail.html?id=${item.id}">${item.name}</a></div>
+          </div>
+          <div class="col-price">¥${formatPrice(item.price)}</div>
+          <div class="col-qty">
+            <button onclick="changeItemQty(${item.id}, -1)">−</button>
+            <input type="number" value="${item.qty}" min="1" onchange="setItemQty(${item.id}, this.value)">
+            <button onclick="changeItemQty(${item.id}, 1)">+</button>
+          </div>
+          <div class="col-total">¥${formatPrice(item.price * item.qty)}</div>
+          <div class="col-action"><a href="#" onclick="deleteItem(${item.id});return false;">删除</a></div>
+        </div>`
+      ).join("");
+
+      updateSummary();
+    }
+
+    function toggleItem(id, checked) {
+      if (checked) selectedItems.add(id); else selectedItems.delete(id);
+      document.getElementById("selectAll").checked = selectedItems.size === getCart().length;
+      document.getElementById("selectAllBottom").checked = selectedItems.size === getCart().length;
+      updateSummary();
+    }
+
+    window.toggleSelectAll = function() {
+      const cart = getCart();
+      const checked = document.getElementById("selectAll").checked;
+      document.getElementById("selectAllBottom").checked = checked;
+      selectedItems.clear();
+      if (checked) cart.forEach(item => selectedItems.add(item.id));
+      renderCart();
+    };
+
+    window.changeItemQty = function(id, d) {
+      const cart = getCart();
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.qty = Math.max(1, item.qty + d);
+        saveCart(cart);
+        renderCart();
+      }
+    };
+
+    window.setItemQty = function(id, val) {
+      const qty = Math.max(1, parseInt(val) || 1);
+      updateCartQty(id, qty);
+      renderCart();
+    };
+
+    window.deleteItem = function(id) {
+      if (confirm("确定删除该商品吗？")) {
+        removeFromCart(id);
+        selectedItems.delete(id);
+        renderCart();
+      }
+    };
+
+    function updateSummary() {
+      const cart = getCart();
+      let total = 0;
+      let count = 0;
+      cart.forEach(item => {
+        if (selectedItems.has(item.id)) {
+          total += item.price * item.qty;
+          count += item.qty;
+        }
+      });
+      document.getElementById("totalPrice").textContent = formatPrice(total);
+      document.getElementById("selectedCount").textContent = count;
+    }
+
+    window.checkout = function() {
+      if (selectedItems.size === 0) { alert("请至少选择一件商品"); return; }
+      alert("恭喜！订单提交成功（演示功能）\n总计：¥" + document.getElementById("totalPrice").textContent);
+    };
+
+    function searchProducts() {
+      const q = document.getElementById("searchInput").value.trim();
+      if (q) location.href = `list.html?q=${encodeURIComponent(q)}`;
+    }
+    document.getElementById("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") searchProducts(); });
+
+    renderCart();
+    updateCartBadge();
+  </script>
+</body>
+</html>
